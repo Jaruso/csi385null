@@ -1,6 +1,3 @@
-//Team null
-//fatSupport.c from package.tgz
-
 /*****************************************************************************
  * Supporting functions for the FAT project:
  *
