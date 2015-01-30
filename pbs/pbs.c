@@ -1,5 +1,6 @@
-//Team null
-//pbs.c
+// Team null
+// 01/28/2015
+// pbs.c
 
 //PREPROCESSOR DIRECTIVES
 
@@ -44,11 +45,22 @@ extern void set_fat_entry(int fat_entry_number, int value, char* fat);
 void readBootSector();
 void printBootSector();
 
-main()
+//CODE
+int main(int argc, char** argv)
 {
-    unsigned char* boot; //Buffer, basically
+    unsigned char* boot, *floppyImageName; //Buffer (basically) and C-string for floppy image name from arguments 
+ 
+    if(argc != 2) { //Invalid arguments provided, print usage message
+        printf("Usage: %s floppyImageName\n", argv[0]); //Example: ./pbs floppy1
+        printf("Example: ./pbs floppy1\n"); //Display a clear example of proper usage
+        
+	//Can't proceed
+	exit(1); //EXIT_SUCCESS);
+    }
 
-    FILE_SYSTEM_ID = fopen("floppy1", "r+"); //Hard-coded to flopp1 for now for testing... in r+ mode
+    floppyImageName = argv[1]; //1st argument after command name should be name of the floppy image
+
+    FILE_SYSTEM_ID = fopen(floppyImageName, "r+"); //FIXED; IGNORE -- Hard-coded to flopp1 for now for testing... in r+ mode
 
     int mostSignificantBits;
     int leastSignificantBits;
@@ -57,20 +69,25 @@ main()
     if (FILE_SYSTEM_ID == NULL)
     {
         printf("Could not open the floppy drive or image.\n");
-         exit(1);
+
+	//Can't proceed
+        exit(1);
     }
 
     // Then reset it per the value in the boot sector
     boot = (unsigned char*) malloc(BYTES_PER_SECTOR * sizeof(unsigned char));
 
     if (read_sector(0, boot) == -1) {
-         printf("Something has gone wrong -- could not read the boot sector\n");
+        printf("Something has gone wrong -- could not read the boot sector\n");
+
+	//Can't proceed
+	exit(1);
     }
 
-    // 12 (not 11) because little endian
+    //12 (not 11) because little endian
     //int bytesPerSector -- [ - ]
     mostSignificantBits  = (((int) boot[12]) << 8) & 0x0000ff00;
-    leastSignificantBits =   ((int) boot[11]) & 0x000000ff;
+    leastSignificantBits = ((int) boot[11]) & 0x000000ff;
     bootSector.bytesPerSector = mostSignificantBits | leastSignificantBits;
 
     BYTES_PER_SECTOR = bootSector.bytesPerSector;
@@ -81,13 +98,15 @@ main()
 
 void readBootSector()
 {
-    unsigned char* boot;
+    unsigned char* boot; //Buffer, basically
 
     int sectorNumber = 0, i = 0, bytesRead = 0, mostSignificantBit = 0, leastSignificantBit = 0;
 
     boot = (unsigned char*) malloc (BYTES_PER_SECTOR * sizeof(unsigned char));
 
     bytesRead = read_sector(sectorNumber, boot);
+
+    //SHIFT THOSE BITS
 
     //int sectorsPerCluster -- [ - ]
     bootSector.sectorsPerCluster = ((int) boot[13]);
@@ -151,14 +170,16 @@ void readBootSector()
     for (i = 0; i < 11; i ++) { // 0 < 11 (10)
         bootSector.volumeLabel[i] = boot[43 + i];
     }
-    bootSector.volumeLabel[11] = '\0'; //Don't forget the null terminator
+    bootSector.volumeLabel[11] = '\0'; //Don't forget the null terminator, please!
 
     //char fileSystemType[9] -- [54 - 61]
     //use "i"
     for (i = 0; i < 8; i ++) { // 0 < 8 (7)
         bootSector.fileSystemType[i] = boot[54 + i];
     }
-    bootSector.fileSystemType[8] = '\0'; //Don't forget the null terminator
+    bootSector.fileSystemType[8] = '\0'; //Don't forget the null terminator, please!
+
+    //Did all that shifting work? I hope so.
 }
 
 void printBootSector() //pbs()
@@ -172,9 +193,9 @@ void printBootSector() //pbs()
   	printf("Sectors per FAT:             %i\n", bootSector.sectorsPerFat);
   	printf("Sectors per track:           %i\n", bootSector.sectorsPerTrack);
   	printf("Number of heads:             %i\n", bootSector.numberOfHeads);
-  	printf("Boot signature:              %p\n", bootSector.bootSignature); //h; use p
-  	printf("Volume ID:                   %p\n", bootSector.volumeId); //h; use p
-  	printf("Volume label:                %s\n", bootSector.volumeLabel); //char array
+  	printf("Boot signature:              %p\n", bootSector.bootSignature);  //h; use p -- Note: expects argument of type ‘void *’, but argument 2 has type ‘int’ [-Wformat=]
+  	printf("Volume ID:                   %p\n", bootSector.volumeId);       //h; use p -- Note: expects argument of type ‘void *’, but argument 2 has type ‘int’ [-Wformat=]
+  	printf("Volume label:                %s\n", bootSector.volumeLabel);    //char array
   	printf("File system type:            %s\n", bootSector.fileSystemType); //char array
 }
 

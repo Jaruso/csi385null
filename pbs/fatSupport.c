@@ -1,3 +1,7 @@
+// Team null
+// 01/28/2015
+// Provided file fatSupport.c from archive package.tgz
+
 /*****************************************************************************
  * Supporting functions for the FAT project:
  *
