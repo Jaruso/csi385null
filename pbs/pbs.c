@@ -1,6 +1,5 @@
-// Team null
-// 01/28/2015
-// pbs.c
+//Team null
+//pbs.c
 
 //PREPROCESSOR DIRECTIVES
 
@@ -44,23 +43,13 @@ extern void set_fat_entry(int fat_entry_number, int value, char* fat);
 
 void readBootSector();
 void printBootSector();
-
-//CODE
-int main(int argc, char** argv)
+int convertLittle(unsigned char* data, int ArrayPosition,int byteSize);
+int getBytePosition(int position);
+main()
 {
-    unsigned char* boot, *floppyImageName; //Buffer (basically) and C-string for floppy image name from arguments 
- 
-    if(argc != 2) { //Invalid arguments provided, print usage message
-        printf("Usage: %s floppyImageName\n", argv[0]); //Example: ./pbs floppy1
-        printf("Example: ./pbs floppy1\n"); //Display a clear example of proper usage
-        
-	//Can't proceed
-	exit(1); //EXIT_SUCCESS);
-    }
+    unsigned char* boot; //Buffer, basically
 
-    floppyImageName = argv[1]; //1st argument after command name should be name of the floppy image
-
-    FILE_SYSTEM_ID = fopen(floppyImageName, "r+"); //FIXED; IGNORE -- Hard-coded to flopp1 for now for testing... in r+ mode
+    FILE_SYSTEM_ID = fopen("floppy1", "r+"); //Hard-coded to flopp1 for now for testing... in r+ mode
 
     int mostSignificantBits;
     int leastSignificantBits;
@@ -69,119 +58,119 @@ int main(int argc, char** argv)
     if (FILE_SYSTEM_ID == NULL)
     {
         printf("Could not open the floppy drive or image.\n");
-
-	//Can't proceed
-        exit(1);
+         exit(1);
     }
 
     // Then reset it per the value in the boot sector
     boot = (unsigned char*) malloc(BYTES_PER_SECTOR * sizeof(unsigned char));
 
     if (read_sector(0, boot) == -1) {
-        printf("Something has gone wrong -- could not read the boot sector\n");
-
-	//Can't proceed
-	exit(1);
+         printf("Something has gone wrong -- could not read the boot sector\n"); ///???
     }
 
-    //12 (not 11) because little endian
+    // 12 (not 11) because little endian
     //int bytesPerSector -- [ - ]
-    mostSignificantBits  = (((int) boot[12]) << 8) & 0x0000ff00;
-    leastSignificantBits = ((int) boot[11]) & 0x000000ff;
-    bootSector.bytesPerSector = mostSignificantBits | leastSignificantBits;
+    bootSector.bytesPerSector = convertLittle(boot,12,2);
 
     BYTES_PER_SECTOR = bootSector.bytesPerSector;
 
     readBootSector(boot);
     printBootSector();
+
 }
 
 void readBootSector()
 {
-    unsigned char* boot; //Buffer, basically
+    unsigned char* boot;
 
     int sectorNumber = 0, i = 0, bytesRead = 0, mostSignificantBit = 0, leastSignificantBit = 0;
 
     boot = (unsigned char*) malloc (BYTES_PER_SECTOR * sizeof(unsigned char));
 
-    bytesRead = read_sector(sectorNumber, boot);
-
-    //SHIFT THOSE BITS
+    bytesRead = read_sector(sectorNumber, boot); //so this read everthing to boot
 
     //int sectorsPerCluster -- [ - ]
     bootSector.sectorsPerCluster = ((int) boot[13]);
 
     //int numberOfReservedSectors -- [14 - 15]
-    mostSignificantBit  = (((int) boot[15]) << 8) & 0x0000ff00;
-    leastSignificantBit = ((int) boot[14]) & 0x000000ff;
-    bootSector.numberOfReservedSectors = mostSignificantBit | leastSignificantBit;
+    bootSector.numberOfReservedSectors = convertLittle(boot,15,2); 
 
     //int numberOfFats -- [ - ]
     bootSector.numberOfFats = ((int) boot[16]);
 
     //int maximumNumberOfRootEntries -- [17 - 18]
-    mostSignificantBit  = (((int) boot[18]) << 8) & 0x0000ff00;
-    leastSignificantBit = ((int) boot[17]) & 0x000000ff;
-    bootSector.maximumNumberOfRootEntries = mostSignificantBit | leastSignificantBit;
+    bootSector.maximumNumberOfRootEntries = convertLittle(boot,18,2);
 
     //int totalSectorCount -- [19 - 20]
-    mostSignificantBit  = (((int) boot[20]) << 8) & 0x0000ff00;
-    leastSignificantBit = ((int) boot[19]) & 0x000000ff;
-    bootSector.totalSectorCount = mostSignificantBit | leastSignificantBit;
+    bootSector.totalSectorCount = convertLittle(boot,20,2);
 
     //int sectorsPerFat -- [22 - 23]
-    mostSignificantBit  = (((int) boot[23]) << 8) & 0x0000ff00;
-    leastSignificantBit = ((int) boot[22]) & 0x000000ff;
-    bootSector.sectorsPerFat = mostSignificantBit | leastSignificantBit;
+    bootSector.sectorsPerFat = convertLittle(boot,23,2);
 
     //int sectorsPerTrack -- [24 - 25]
-    mostSignificantBit  = (((int) boot[25]) << 8) & 0x0000ff00;
-    leastSignificantBit = ((int) boot[24]) & 0x000000ff;
-    bootSector.sectorsPerTrack = mostSignificantBit | leastSignificantBit;
+    bootSector.sectorsPerTrack = convertLittle(boot,25,2);
 
     //int numberOfHeads -- [26 - 27]
-    mostSignificantBit  = (((int) boot[27]) << 8) & 0x0000ff00;
-    leastSignificantBit = ((int) boot[26]) & 0x000000ff;
-    bootSector.numberOfHeads = mostSignificantBit | leastSignificantBit;
+    bootSector.numberOfHeads = convertLittle(boot,27,2);
 
     //int sectorCount -- [32 - 35]
-    mostSignificantBit  = (((int) boot[35]) << 24) & 0xff000000;
-    leastSignificantBit = (((int) boot[34]) << 16) & 0x00ff0000;
-    mostSignificantBit = mostSignificantBit | leastSignificantBit;
-    leastSignificantBit = (((int) boot[33]) <<  8) & 0x0000ff00;
-    mostSignificantBit = mostSignificantBit | leastSignificantBit;
-    leastSignificantBit = ((int) boot[32]) & 0x000000ff;
-    bootSector.sectorCount = mostSignificantBit | leastSignificantBit;
+    bootSector.sectorCount = convertLittle(boot,35,4);
 
     //int bootSignature -- [ - ] 
     bootSector.bootSignature = ((int) boot[38]);
 
     //int volumeId -- [39 - 42]
-    mostSignificantBit  = (((int) boot[42]) << 24) & 0xff000000;
-    leastSignificantBit = (((int) boot[41]) << 16) & 0x00ff0000;
-    mostSignificantBit = mostSignificantBit | leastSignificantBit;
-    leastSignificantBit = (((int) boot[40]) <<  8) & 0x0000ff00;
-    mostSignificantBit = mostSignificantBit | leastSignificantBit;
-    leastSignificantBit = ((int) boot[39]) & 0x000000ff;
-    bootSector.volumeId = mostSignificantBit | leastSignificantBit;
+    bootSector.volumeId = convertLittle(boot,42,4);;
 
     //char volumeLabel[12] -- [43 - 53]
     //use "i"
     for (i = 0; i < 11; i ++) { // 0 < 11 (10)
         bootSector.volumeLabel[i] = boot[43 + i];
     }
-    bootSector.volumeLabel[11] = '\0'; //Don't forget the null terminator, please!
+    bootSector.volumeLabel[11] = '\0'; //Don't forget the null terminator
 
     //char fileSystemType[9] -- [54 - 61]
     //use "i"
     for (i = 0; i < 8; i ++) { // 0 < 8 (7)
         bootSector.fileSystemType[i] = boot[54 + i];
     }
-    bootSector.fileSystemType[8] = '\0'; //Don't forget the null terminator, please!
-
-    //Did all that shifting work? I hope so.
+    bootSector.fileSystemType[8] = '\0'; //Don't forget the null terminator
 }
 
+/*
+purpose: convert little endian into big endian
+
+*/
+int convertLittle(unsigned char* data, int arrayPosition,int byteSize)
+{
+	int i = byteSize-1;
+  int leastSignificantBit;
+	int mostSignificantBit = (((int) data[arrayPosition]) << 8 * i) & getBytePosition(i);
+
+	for(i = byteSize-2;i > -1;i--)
+	{
+		leastSignificantBit = (((int) data[--arrayPosition]) << 8 * i) & getBytePosition(i); //interate arrayPosition here
+		mostSignificantBit = mostSignificantBit | leastSignificantBit;
+	}
+	return mostSignificantBit;
+}
+
+int getBytePosition(int position) { 
+		int checkbit;
+		if(position == 0 )
+			checkbit = 0x000000ff;
+		else if(position == 1)
+			checkbit = 0x0000ff00;
+		else if(position == 2)
+			checkbit = 0x00ff0000;
+		else if(position == 3)
+			checkbit = 0xff000000;
+		else{
+			printf("bad call");
+			checkbit =0;
+		}
+		return checkbit;
+}
 void printBootSector() //pbs()
 { 
 	printf("Bytes per sector:            %i\n", bootSector.bytesPerSector);
@@ -193,9 +182,10 @@ void printBootSector() //pbs()
   	printf("Sectors per FAT:             %i\n", bootSector.sectorsPerFat);
   	printf("Sectors per track:           %i\n", bootSector.sectorsPerTrack);
   	printf("Number of heads:             %i\n", bootSector.numberOfHeads);
-  	printf("Boot signature:              %p\n", bootSector.bootSignature);  //h; use p -- Note: expects argument of type ‘void *’, but argument 2 has type ‘int’ [-Wformat=]
-  	printf("Volume ID:                   %p\n", bootSector.volumeId);       //h; use p -- Note: expects argument of type ‘void *’, but argument 2 has type ‘int’ [-Wformat=]
-  	printf("Volume label:                %s\n", bootSector.volumeLabel);    //char array
+  	printf("Boot signature:              %p\n", bootSector.bootSignature); //h; use p
+  	printf("Volume ID:                   %p\n", bootSector.volumeId); //h; use p
+  	printf("Volume label:                %s\n", bootSector.volumeLabel); //char array
   	printf("File system type:            %s\n", bootSector.fileSystemType); //char array
 }
+
 
