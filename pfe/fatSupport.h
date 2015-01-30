@@ -1,3 +1,7 @@
+// Team null
+// Date: 01/28/2015
+// Provided fatSupport.h file (from package.tgz)
+
 int read_sector(int sector_number, char* buffer);
 int write_sector(int sector_number, char* buffer);
 

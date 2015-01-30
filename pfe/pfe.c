@@ -1,5 +1,6 @@
-//Team null
-//pfe.c
+// Team null
+// Date: 01/28/2015
+// pfe.c
 
 //PREPROCESSOR DIRECTIVES
 
@@ -34,29 +35,34 @@
 int    BYTES_PER_SECTOR = 512; //512 bytes per FAT12 sector
 FILE   *FILE_SYSTEM_ID; //File pointer, define which floppy image to use for file IO
 
+//CODE
 int main(int argc, char** argv)
 {
-    int startIndex, finishIndex, i;      
+    int startIndex, finishIndex, maximumFinishIndex, i;      
     unsigned char *buffer;  
  
     FILE_SYSTEM_ID = fopen("floppy1", "r+"); //Hard-coded to flopp1 for now for testing... in r+ mode
 
-    if (((argc == 3) || (argc == 4)) &&
-        ((startIndex = atoi(argv[1])) <= (finishIndex = atoi(argv[2]))) &&
-        (atoi(argv[2]) < BYTES_PER_SECTOR * 9 * 2 / 3)) {
+    startIndex = atoi(argv[1]);
+    finishIndex = atoi(argv[2]);
+    maximumFinishIndex = (BYTES_PER_SECTOR * 9 * 2 / 3);
+
+    if (argc == 3 &&
+        (startIndex <= finishIndex) &&
+        (atoi(argv[2]) < maximumFinishIndex)) {
 
         buffer = (char*) malloc(9 * BYTES_PER_SECTOR * sizeof(char));
 
-        for (i = 1; i <= 9; i++) { //Readl all
+        for (i = 1; i <= 9; i++) { //Read all
             read_sector(i, buffer + BYTES_PER_SECTOR * (i - 1));
         }
 
         for(i = startIndex; i <= finishIndex; i++) { //Display all within specified range
-            printf("Entry %d:\t%X\n", i, get_fat_entry(i, buffer));
+            printf("Entry %d : %X\n", i, get_fat_entry(i, buffer));
         }
     }
     else { //Invalid arguments provided, print usage message
-        printf("Usage: %s startIndex finishIndex\n", argv[0]);
+        printf("Usage: %s startIndex finishIndex\n", argv[0]); //Example: ./pfe 1 5
     }
 
     exit(EXIT_SUCCESS);
