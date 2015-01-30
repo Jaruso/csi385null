@@ -1,82 +1,83 @@
-/******************************************************************************/
-
 //Team null
-//pbs.c (Print Boot Sector)
+//pbs.c
 
-/******************************************************************************/
+//PREPROCESSOR DIRECTIVES
 
-//Preprocessor directives
 //Include C-libraries first
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 
-//Include local files
+//Include local .c/.h files next
 #include "bootSector.h"
-//#include "fatSupport.h"
 
-/******************************************************************************/
+/******************************************************************************
+ * You must set these global variables:
+ *    FILE_SYSTEM_ID -- the file id for the file system (here, the floppy disk
+ *                      filesystem)
+ *    BYTES_PER_SECTOR -- the number of bytes in each sector of the filesystem
+ *
+ * You may use these support functions (defined in FatSupport.c)
+ *    read_sector
+ *    write_sector
+ *    get_fat_entry
+ *    set_fat_entry
+ *****************************************************************************/
 
-//EXTERN SECTION
+//We will define these variables for use in here (pbs.c) for now...
+//extern FILE *FILE_SYSTEM_ID;
+//extern int  BYTES_PER_SECTOR;
+
+//VARIABLES
+int    BYTES_PER_SECTOR = 512; //512 bytes per FAT12 sector
+FILE   *FILE_SYSTEM_ID; //File pointer, define which floppy image to use for file IO
+
+BootSector bootSector;
+
+//PROTOTYPES
 extern int read_sector(int sector_number, char* buffer);
 extern int write_sector(int sector_number, char* buffer);
 
 extern int  get_fat_entry(int fat_entry_number, char* fat);
 extern void set_fat_entry(int fat_entry_number, int value, char* fat);
 
-/******************************************************************************/
-
-//VARIABLES AND PROTOTYPES
-FILE* FILE_SYSTEM_ID; //Should also be passed in/not defined here. KISS for now...
-int BYTES_PER_SECTOR; //Move this definition to a header file where it makes most sense
-
-BootSector bootSector; //This variables should be passed in as a paremeter later on, not defined here
-
 void readBootSector();
-void printBootSector(); //pbs()
+void printBootSector();
 
-/******************************************************************************/
-
-//CODE
-int main()
+main()
 {
-    unsigned char* boot; //Buffer
+    unsigned char* boot; //Buffer, basically
+
+    FILE_SYSTEM_ID = fopen("floppy1", "r+"); //Hard-coded to flopp1 for now for testing... in r+ mode
 
     int mostSignificantBits;
     int leastSignificantBits;
     int bytesPerSector;
 
-   // Use this for an image of a floppy drive
-   FILE_SYSTEM_ID = fopen("floppy1", "r+"); //Use floop1 for testing in r+ mode
-
     if (FILE_SYSTEM_ID == NULL)
     {
         printf("Could not open the floppy drive or image.\n");
-        exit(1);
+         exit(1);
     }
 
     // Then reset it per the value in the boot sector
     boot = (unsigned char*) malloc(BYTES_PER_SECTOR * sizeof(unsigned char));
 
     if (read_sector(0, boot) == -1) {
-        printf("Something has gone wrong -- could not read the boot sector\n");
-        return 1;
+         printf("Something has gone wrong -- could not read the boot sector\n");
     }
 
     // 12 (not 11) because little endian
     //int bytesPerSector -- [ - ]
     mostSignificantBits  = (((int) boot[12]) << 8) & 0x0000ff00;
-    leastSignificantBits = ((int) boot[11]) & 0x000000ff;
+    leastSignificantBits =   ((int) boot[11]) & 0x000000ff;
     bootSector.bytesPerSector = mostSignificantBits | leastSignificantBits;
 
     BYTES_PER_SECTOR = bootSector.bytesPerSector;
 
     readBootSector(boot);
     printBootSector();
-
-    return 0;
 }
-
 
 void readBootSector()
 {

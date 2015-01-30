@@ -11,4 +11,4 @@ pbs.o: bootSector.h
 	${CC} ${CFLAGS} pbs.c
 
 clean:
-	rm -f *.o *~
+	rm -f *.o *~ pbs
