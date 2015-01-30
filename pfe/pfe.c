@@ -39,15 +39,17 @@ FILE   *FILE_SYSTEM_ID; //File pointer, define which floppy image to use for fil
 int main(int argc, char** argv)
 {
     int startIndex, finishIndex, maximumFinishIndex, i;      
-    unsigned char *buffer;  
+    unsigned char *buffer, *floppyImageName;  
  
-    FILE_SYSTEM_ID = fopen("floppy1", "r+"); //Hard-coded to flopp1 for now for testing... in r+ mode
+    floppyImageName = argv[3];
+
+    FILE_SYSTEM_ID = fopen(floppyImageName, "r+"); //FIXED; IGNORE -- Hard-coded to flopp1 for now for testing... in r+ mode
 
     startIndex = atoi(argv[1]);
     finishIndex = atoi(argv[2]);
     maximumFinishIndex = (BYTES_PER_SECTOR * 9 * 2 / 3);
 
-    if (argc == 3 &&
+    if (argc == 4 &&
         (startIndex <= finishIndex) &&
         (atoi(argv[2]) < maximumFinishIndex)) {
 
@@ -62,7 +64,8 @@ int main(int argc, char** argv)
         }
     }
     else { //Invalid arguments provided, print usage message
-        printf("Usage: %s startIndex finishIndex\n", argv[0]); //Example: ./pfe 1 5
+        printf("Usage: %s startIndex finishIndex floppyImageName\n", argv[0]); //Example: ./pfe 1 5 floppy1
+        printf("Example: ./pfe 1 5 floppy1\n"); //Display a clear example of proper usage
     }
 
     exit(EXIT_SUCCESS);
