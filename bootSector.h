@@ -1,8 +1,8 @@
 // Team null
 // bootSector.h
 
-
-struct BootSector
+//STRUCT DEFINITION
+struct bootSector
 {
 	int bytesPerSector;
 	int sectorsPerCluster;
@@ -20,3 +20,5 @@ struct BootSector
 	char volumeLabel[12];
 	char fileSystemType[9];
 };
+
+typedef struct bootSector BootSector; //Struct "BootSector" won't be recognized without a typedef?; renamed to bootSector and define as BootSector for now
