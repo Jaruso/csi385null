@@ -41,13 +41,13 @@ int main(int argc, char** argv){
         
         
         char* pch = strtok(input, " \n");
-        char* poop = "";
+        char* arguments = "";
         char* command = pch;
         while(pch != NULL)
         {
-            printf("%s\n",poop);
+            printf("%s\n",arguments);
             pch = strtok (NULL, " ");
-            asprintf(&poop, "%s %s", poop, pch); //concantinate strings
+            asprintf(&arguments, "%s %s", arguments, pch); //concantinate strings
         }
         
         
@@ -65,7 +65,7 @@ int main(int argc, char** argv){
             exit(-1);
         }
         else{
-            execl(command,poop,NULL); //so it works when you put shell in pbs file but it doesn't work otherwise
+            execl(command,arguments,NULL); //so it works when you put shell in pbs file but it doesn't work otherwise
         }
         
         
